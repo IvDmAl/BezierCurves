@@ -25,7 +25,8 @@ private:
   void check_events();
 
   // Отрисовка кривой Безье
-  void draw_bezier_curves();
+  void draw_bezier_curves(std::vector<Eigen::Vector2d> points_,
+    sf::Color c);
   // Отрисовка точек, задающих кривую Безье
   void draw_points();
   // Отрисовка панели инструментов
@@ -36,8 +37,10 @@ private:
   void draw_line(sf::Vector2f a, sf::Vector2f b);
   // Отрисовка текста на панели инструментов
   void draw_text();
-  // Отрисовка точки, делящий отрезок в отношении t
-  void draw_point_on_time(double t);
+  // Отрисовка точек, делящий отрезок в отношении t
+  void draw_recursive_points_on_time(double t,
+    std::vector<Eigen::Vector2d>& points_);
+  void draw_points_on_time(double t);
   // Общая функция отрисовки
   void draw();
 

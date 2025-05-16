@@ -168,26 +168,27 @@ void BezierCurves::check_events()
   }
 }
 
-void BezierCurves::draw_bezier_curves()
+void BezierCurves::draw_bezier_curves(
+  std::vector<Eigen::Vector2d> points_, sf::Color c)
 {
   const double step = 0.001;
-  if (points.size() >= 2)
+  if (points_.size() >= 2)
   {
     std::vector<sf::Vertex> line;
     for (long double t = 0; t <= 1; t += step)
     {
       Eigen::Vector2d point(0, 0);
-      for (int i = 0; i < points.size(); ++i)
+      for (int i = 0; i < points_.size(); ++i)
       {
-        double c = C(points.size() - 1, i);
+        double c = C(points_.size() - 1, i);
         double t1 = bin_pow(t, i);
-        double t2 = bin_pow(1 - t, points.size() - i - 1);
-        point += c * t1 * t2 * points[i];
+        double t2 = bin_pow(1 - t, points_.size() - i - 1);
+        point += c * t1 * t2 * points_[i];
       }
 
       sf::Vertex a;
       a.position = sf::Vector2f(point.x(), point.y());
-      a.color = sf::Color::Black;
+      a.color = c;
       line.push_back(a);
     }
     window.draw(line.data(), line.size(), sf::PrimitiveType::LineStrip);
@@ -299,24 +300,39 @@ void BezierCurves::draw_mouse()
   window.draw(sprite);
 }
 
-void BezierCurves::draw_point_on_time(double t)
+void BezierCurves::draw_recursive_points_on_time(double t,
+  std::vector<Eigen::Vector2d>& points_)
 {
-  Eigen::Vector2d point(0, 0);
-  for (int i = 0; i < points.size(); ++i)
+  for (int i = 0; i < points_.size() - 1; ++i)
   {
-    double c = C(points.size() - 1, i);
-    double t1 = bin_pow(t, i);
-    double t2 = bin_pow(1 - t, points.size() - i - 1);
-    point += c * t1 * t2 * points[i];
+    draw_line(sf::Vector2f(to_sf(points_[i])),
+      sf::Vector2f(to_sf(points_[i + 1])));
   }
+  std::vector<Eigen::Vector2d> new_points;
+  for (int i = 0; i < points_.size() - 1; ++i)
+  {
+    new_points.push_back(points_[i] +
+      t * (points_[i + 1] - points_[i]));
+  }
+  if (new_points.size() == 1)
+  {
+    sf::CircleShape cs_;
+    cs_.setPosition(sf::Vector2f(to_sf(new_points.front())));
+    cs_.setFillColor(sf::Color(0, 0, 0));
+    cs_.setRadius(radius_point * 0.5);
+    cs_.setOrigin(sf::Vector2f(radius_point * 0.5,
+      radius_point * 0.5));
+    window.draw(cs_);
+  }
+  else
+  {
+    draw_recursive_points_on_time(t, new_points);
+  }
+}
 
-  sf::CircleShape cs_;
-  cs_.setPosition(sf::Vector2f(point.x(), point.y()));
-  cs_.setFillColor(sf::Color(0, 0, 0));
-  cs_.setRadius(radius_point * 0.5);
-  cs_.setOrigin(sf::Vector2f(radius_point * 0.5, 
-    radius_point * 0.5));
-  window.draw(cs_);
+void BezierCurves::draw_points_on_time(double t)
+{
+  draw_recursive_points_on_time(t, points);
 
   sf::Text text(font, 
     std::string("point separation coefficient: ") +
@@ -330,9 +346,9 @@ void BezierCurves::draw()
 {
   window.clear(sf::Color::White);
   draw_title();
-  draw_bezier_curves();
+  draw_bezier_curves(points, sf::Color::Black);
   if (points.size() >= 2)
-    draw_point_on_time(get_mc() % 10000 / 10000.0);
+    draw_points_on_time(get_mc() % 30000 / 30000.0);
   draw_points();
   
   draw_mouse();
