@@ -301,7 +301,9 @@ void BezierCurves::draw_mouse()
 }
 
 void BezierCurves::draw_recursive_points_on_time(double t,
-  std::vector<Eigen::Vector2d>& points_)
+  std::vector<Eigen::Vector2d>& points_,
+  std::vector<std::pair<Eigen::Vector2d,
+  Eigen::Vector2d>>& dots)
 {
   for (int i = 0; i < points_.size() - 1; ++i)
   {
@@ -323,16 +325,31 @@ void BezierCurves::draw_recursive_points_on_time(double t,
     cs_.setOrigin(sf::Vector2f(radius_point * 0.5,
       radius_point * 0.5));
     window.draw(cs_);
+
+    dots.push_back({ new_points.front(), new_points.back() });
+
+    std::vector<Eigen::Vector2d> first_part, last_part;
+    for (int i = 0; i < dots.size(); ++i)
+    {
+      first_part.push_back(dots[i].first);
+      last_part.push_back(dots[dots.size() - 1 - i].second);
+    }
+
+    draw_bezier_curves(first_part, sf::Color::Green);
+    draw_bezier_curves(last_part, sf::Color::Red);
   }
   else
   {
-    draw_recursive_points_on_time(t, new_points);
+    dots.push_back({ new_points.front(), new_points.back() });
+    draw_recursive_points_on_time(t, new_points, dots);
   }
 }
 
 void BezierCurves::draw_points_on_time(double t)
 {
-  draw_recursive_points_on_time(t, points);
+  std::vector<std::pair<Eigen::Vector2d,
+    Eigen::Vector2d>> dots = { {points.front(), points.back()}};
+  draw_recursive_points_on_time(t, points, dots);
 
   sf::Text text(font, 
     std::string("point separation coefficient: ") +

@@ -39,7 +39,9 @@ private:
   void draw_text();
   // Отрисовка точек, делящий отрезок в отношении t
   void draw_recursive_points_on_time(double t,
-    std::vector<Eigen::Vector2d>& points_);
+    std::vector<Eigen::Vector2d>& points_,
+    std::vector<std::pair<Eigen::Vector2d, 
+    Eigen::Vector2d>>& dots);
   void draw_points_on_time(double t);
   // Общая функция отрисовки
   void draw();
